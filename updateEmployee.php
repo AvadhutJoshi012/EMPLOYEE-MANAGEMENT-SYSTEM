@@ -1,0 +1,197 @@
+<?php include('dbconnect/connect.php') ?>
+<?php session_start(); ?>
+
+<?php if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+  header('Location: login.php');
+  exit;
+}
+
+?>
+
+<?php
+
+// SQL query to fetch data from users table
+$sql = "SELECT * FROM employee where flag = TRUE";
+$result = $conn->query($sql);
+
+// Check if any rows were returned
+if ($result->num_rows > 0) {
+  // Initialize an empty array to store fetched data
+  $data = array();
+
+  // Fetch associative array
+  while ($row = $result->fetch_assoc()) {
+    $data[] = $row;
+  }
+} else {
+  echo "0 results";
+}
+
+// Close connection
+$conn->close();
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update Employee</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="shortcut icon" href="images/LTlogo.png" type="image/x-icon">
+  <style>
+    .wrapper {
+      display: flex;
+    }
+
+    .main {
+      flex: 1;
+      padding: 10px;
+    }
+
+    #bsuccess {
+      color: #fff;
+      background-color: #0d6efd;
+    }
+
+    #bsuccess:hover {
+      border: 1px solid #0d6efd;
+      color: #0d6efd;
+      background-color: #fff;
+    }
+
+    
+
+    #bdanger {
+      color: #fff;
+      background-color: #dc3545;
+    }
+    #bdanger:hover {
+      border: 1px solid #dc3545;
+      color: #dc3545;
+      background-color: #fff;
+    }
+
+    
+  </style>
+</head>
+
+<body>
+  <?php include('header.php'); ?>
+  <div class="wrapper">
+    <div class="d-flex flex-column flex-shrink-0 p-3 bg-light" style="width: 280px; height:92vh;">
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a href="index.php" class="nav-link link-dark" aria-current="page">
+            <i class="fa-solid fa-house"></i><span style="margin-left: 8px;  font-size:20px">Home</span>
+          </a>
+        </li>
+        <li class="mb-1">
+          <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed nav-link link-dark" data-bs-toggle="collapse" data-bs-target="#home-collapse">
+            <i class="fa fa-solid fa-user"></i><span style="margin-left: 12px;  font-size:20px">Employee</span><i class="fa-solid fa-caret-down" style="margin-left: 5px;"></i>
+          </button>
+          <div class="collapse drop-down-menu show" id="home-collapse">
+            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 ">
+              <li><a href="employee.php" class="link-body-emphasis d-inline-flex text-decoration-none rounded my-1" style="margin-left: 40px;"><i class="fa-solid fa-users" style="margin-top: 8px;"></i><span style="margin-left: 12px;  font-size:20px">View Employee</a></li></span>
+              <li><a href="addEmployee.php" class="link-body-emphasis d-inline-flex text-decoration-none rounded my-1" style="margin-left: 40px;"> <i class="fa fa-solid fa-user-plus" style="margin-top: 8px;"></i><span style="margin-left: 12px;  font-size:20px">Add Employee</a></li></span>
+              <li><a href="updateEmployee.php" class="link-body-emphasis d-inline-flex text-decoration-none rounded my-1" style="margin-left: 40px;"><i class="fa fa-solid fa-user-pen" style="color:#0d6efd; margin-top: 8px;"></i><span style="margin-left: 12px;color:#0d6efd;  font-size:20px ">Update Employee</a></span></li>
+              <li><a href="formerEmployee.php" class="link-body-emphasis d-inline-flex text-decoration-none rounded my-1" style="margin-left: 40px;"><i class="fa fa-solid fa-user-slash"  style="margin-top: 8px;"></i><span style="margin-left: 12px; font-size:20px">Former Employee</a></span></li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <a href="attendence.php" class="nav-link link-dark">
+            <i class="fa-regular fa-calendar-check"></i><span style="margin-left: 12px;  font-size:20px">Attendence</span>
+          </a>
+        </li>
+        <li>
+          <a href="support.php" class="nav-link link-dark">
+            <i class="fa-solid fa-headset"></i><span style="margin-left: 12px;  font-size:20px">Support</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="main" style="overflow-y: auto ; max-height:92vh;">
+      <?php
+      if ($_SESSION['updateEmp']) {
+        echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+            Employee Updated Successfully...!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>';
+        $_SESSION['updateEmp'] = false;
+      } elseif ($_SESSION['deleteEmp']) {
+        echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+            Employee deleted Successfully...!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>';
+        $_SESSION['deleteEmp'] = false;
+      }
+
+      ?>
+
+      <div class="container table">
+        <table id="example" class="table table-striped" style="width:100%">
+          <thead>
+            <tr>
+              <th style="text-align: start;">ID</th>
+              <th>Employee Name</th>
+              <th>Designation</th>
+              <th>Shift</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($data as $row) : ?>
+              <tr>
+                <td style="text-align:start"><?php echo $row['emp_id']; ?></td>
+                <td><?php echo $row['fullname']; ?></td>
+                <td><?php echo $row['designation']; ?></td>
+                <td><?php echo $row['shift']; ?></td>
+                <td><a href="updateEmployeeDetails.php?emp_id=<?php echo $row['emp_id']; ?>"><input type="button" value="Edit" class="btn" id="bsuccess" style="width: 75px;"></a> <a href="deleteEmployee.php?emp_id=<?php echo $row['emp_id']; ?>"><input type="button" value="Delete" class="btn" id="bdanger" style="width: 75px;"  onclick="return confirm('Are you sure you want to delete this employee?')"></a></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <?php include 'chatbot.php'; ?>
+    </div>
+  </div>
+  <?php include('footer.php')?>
+  <!-- <h3>Employee Page</h3> -->
+
+  <!-- <script src="js/bootstrap.bundle.js"></script>
+    <script src="js/navbar.js"></script> -->
+
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/2.0.8/js/dataTables.js"></script>
+  <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.js"></script>
+
+  <!-- <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script> -->
+
+  <script>
+    $(document).ready(function() {
+      $('#example').DataTable();
+    });
+
+    // new DataTable('#example', {
+    // layout: {
+    //     topStart: {
+    //         buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+    //     }
+    // }
+    // });
+  </script>
+</body>
+
+</html>
